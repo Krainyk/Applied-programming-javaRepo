@@ -33,6 +33,14 @@ public class Job {
         return completed;
     }
 
+    public BigDecimal getPartsPrice() {
+        return partsPrice;
+    }
+
+    public BigDecimal getJobPrice() {
+        return jobPrice;
+    }
+
     public BigDecimal totalCost() {
         return partsPrice.add(jobPrice);
     }

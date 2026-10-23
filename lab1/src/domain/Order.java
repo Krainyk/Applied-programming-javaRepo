@@ -1,6 +1,7 @@
 package domain;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,10 +31,18 @@ public class Order {
 
     public BigDecimal calculateTotal() {
         BigDecimal total = BigDecimal.ZERO;
+        Client owner = car.getOwner();
+        BigDecimal hundred = BigDecimal.valueOf(100);
+        // Окремі множники не змішують знижки на запчастини та роботу.
+        BigDecimal partsMultiplier = hundred.subtract(owner.getPartsDiscountPercent()).divide(hundred);
+        BigDecimal laborMultiplier = hundred.subtract(owner.getLaborDiscountPercent()).divide(hundred);
+
         for (Job job : jobs) {
-            total = total.add(job.totalCost());
+            total = total
+                    .add(job.getPartsPrice().multiply(partsMultiplier))
+                    .add(job.getJobPrice().multiply(laborMultiplier));
         }
-        return total;
+        return total.setScale(2, RoundingMode.HALF_UP);
     }
 
     public void diagnose() {

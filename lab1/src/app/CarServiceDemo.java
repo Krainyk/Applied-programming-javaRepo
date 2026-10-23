@@ -2,6 +2,7 @@ package app;
 
 import domain.Car;
 import domain.Client;
+import domain.CorporateClient;
 import domain.Job;
 import domain.Mechanic;
 import domain.Order;
@@ -14,7 +15,6 @@ public class CarServiceDemo {
     public static void main(String[] args) {
         CarService service = new CarService();
 
-        // ---------- 1. Реєстрація клієнта й авто ----------
         System.out.println("=== 1. Реєстрація клієнта й автомобіля ===");
         Client client = new Client("Влад", "+380455623453");
         service.registerClient(client);
@@ -28,7 +28,6 @@ public class CarServiceDemo {
         service.registerMechanic(petro);
         service.registerMechanic(ivan);
 
-        // ---------- 2. Повний успішний цикл ----------
         System.out.println("\n=== 2. Успішне замовлення ===");
         Order order = service.createOrder(car);
         System.out.println("Створено, статус: " + order.getStatus());
@@ -53,11 +52,9 @@ public class CarServiceDemo {
         order.complete();
         System.out.println("Статус: " + order.getStatus());
 
-        // ---------- 3. Вартість ----------
         System.out.println("\n=== 3. Підсумкова вартість ===");
         System.out.println("Разом: " + order.calculateTotal());
 
-        // ---------- Негативні сценарії ----------
         System.out.println("\n=== 4. Погодити порожнє замовлення ===");
         Order empty = service.createOrder(car);
         empty.diagnose();
@@ -79,7 +76,6 @@ public class CarServiceDemo {
         }
 
         System.out.println("\n=== 6. Призначити зайнятого механіка ===");
-        // noMechanic ще активне: даємо йому Петра, потім пробуємо дати Петра іншому
         service.assignMechanic(noMechanic, petro);
         System.out.println("Петро призначений на замовлення, статус: " + noMechanic.getStatus());
         Order another = service.createOrder(car);
@@ -113,6 +109,49 @@ public class CarServiceDemo {
         try {
             service.registerCar(duplicate);
         } catch (IllegalStateException e) {
+            System.out.println("Помилка: " + e.getMessage());
+        }
+
+        System.out.println("\n=== 10. Корпоративний клієнт і знижки ===");
+        CorporateClient corporate = new CorporateClient(
+                "Олена", "+380671112233", "ТОВ АвтоТранс",
+                new BigDecimal("10"), new BigDecimal("20"));
+        service.registerClient(corporate);
+
+        Car corporateCar = new Car("WVWZZZ1JZXW000002", "Mercedes", "Sprinter", 2024, corporate);
+        service.registerCar(corporateCar);
+        Order corporateOrder = service.createOrder(corporateCar);
+        Job corporateJob = new Job("Сервісне обслуговування",
+                new BigDecimal("1000"), new BigDecimal("500"));
+        corporateOrder.addJob(corporateJob);
+        corporateOrder.diagnose();
+        corporateOrder.approve();
+        service.assignMechanic(corporateOrder, ivan);
+        corporateOrder.startWork();
+        corporateOrder.completeJob(corporateJob);
+        corporateOrder.complete();
+        System.out.println("Корпоративний клієнт: " + corporate);
+        System.out.println("Разом зі знижками: " + corporateOrder.calculateTotal());
+
+        System.out.println("\n=== 11. Звичайний клієнт без знижок ===");
+        Car ordinaryCar = new Car("WVWZZZ1JZXW000003", "Ford", "Focus", 2023, client);
+        service.registerCar(ordinaryCar);
+        Order ordinaryOrder = service.createOrder(ordinaryCar);
+        ordinaryOrder.addJob(new Job("Сервісне обслуговування",
+                new BigDecimal("1000"), new BigDecimal("500")));
+        System.out.println("Разом: " + ordinaryOrder.calculateTotal());
+
+        System.out.println("\n=== 12. Перевірка знижок ===");
+        try {
+            new CorporateClient("Ірина", "+380671112244", "ТОВ Перевізник",
+                    new BigDecimal("150"), BigDecimal.ZERO);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Помилка: " + e.getMessage());
+        }
+        try {
+            new CorporateClient("Ірина", "+380671112244", "ТОВ Перевізник",
+                    BigDecimal.ZERO, new BigDecimal("-5"));
+        } catch (IllegalArgumentException e) {
             System.out.println("Помилка: " + e.getMessage());
         }
     }

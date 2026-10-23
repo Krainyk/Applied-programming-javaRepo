@@ -1,5 +1,7 @@
 package domain;
 
+import java.math.BigDecimal;
+
 public class Client {
     private final String name;
     private final String phone;
@@ -14,6 +16,14 @@ public class Client {
         }
         this.name = name;
         this.phone = phone;
+    }
+
+    public BigDecimal getPartsDiscountPercent() {
+        return BigDecimal.ZERO;
+    }
+
+    public BigDecimal getLaborDiscountPercent() {
+        return BigDecimal.ZERO;
     }
 
     @Override
